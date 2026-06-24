@@ -1,0 +1,56 @@
+---
+description: Core project knowledge for HealthGuard extension work
+alwaysApply: true
+---
+
+# HealthGuard Project Knowledge
+
+## Project Overview
+
+- HealthGuard is a Chrome extension focused on digital health.
+- Core goals: manage screen time, reduce hearing risk, and nudge healthy habits.
+- Privacy-first by design: user data stays local, with no outbound telemetry.
+
+## Repository Shape
+
+- Current repository is intentionally minimal and documentation-first.
+- Main source of truth right now is `README.md`.
+- Existing directories:
+  - `docs/` for supporting documentation and assets.
+  - `.cursor/rules/` for persistent AI guidance.
+
+## Product Intent
+
+- Track active browser usage with configurable daily and per-site limits.
+- Monitor media loudness and support safe listening limits.
+- Provide reminders for breaks, posture, hydration, and evening eye comfort.
+- Offer local analytics and user-exportable history.
+
+## Technical Direction
+
+- Target platform is Chrome Extension Manifest V3.
+- Expected runtime model:
+  - service worker for background scheduling/state
+  - content scripts for in-page behavior (overlay/audio hooks)
+  - popup/options UIs for controls and reporting
+- Favor modular utilities for time, storage, and audio calculations.
+
+## Data and Privacy Constraints
+
+- Treat privacy constraints as hard requirements, not optional enhancements.
+- Prefer local-only persistence (`chrome.storage.local`, IndexedDB).
+- Avoid introducing network calls unless explicitly requested by the user.
+- Any analytics or logging should remain local by default.
+
+## Editing and Collaboration Conventions
+
+- Keep documentation clear, skimmable, and accurate to current repo state.
+- When implementation files are added later, keep code structure consistent with documented architecture.
+- Do not assume missing features are already implemented; verify file presence first.
+- If behavior in docs and code diverges, update docs or flag mismatch clearly.
+
+## Contribution Workflow Defaults
+
+- Keep changes focused and reviewable.
+- Prefer small, explicit commits when asked to commit.
+- When unsure about architecture choices, ask before introducing irreversible structure.
