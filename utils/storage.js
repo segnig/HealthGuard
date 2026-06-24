@@ -20,7 +20,8 @@ export const DEFAULT_SETTINGS = Object.freeze({
   hydrateIntervalMin: 60,
   actionOnLimit: "notify",
   blueLightHour: 20,
-  autoExport: false
+  autoExport: false,
+  summaryEnabled: true
 });
 
 /**
@@ -376,5 +377,6 @@ export const Storage = {
  * @property {number} hydrateIntervalMin
  * @property {'notify' | 'overlay' | 'block'} actionOnLimit
  * @property {number} blueLightHour
- * @property {boolean} autoExport
+ *   @property {boolean} autoExport
+  @property {boolean} summaryEnabled
  */

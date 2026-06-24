@@ -2,6 +2,7 @@
   "manifest_version": 3,
   "name": "HealthGuard",
   "version": "1.0.0",
+  "default_locale": "en",
   "description": "Track screen time, protect hearing, and build healthier browsing habits. All data stays on your device.",
   "icons": {
     "16": "icons/icon16.png",

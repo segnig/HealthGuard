@@ -36,25 +36,47 @@ tabButtons.forEach((button) => {
   });
 });
 
+const REMINDER_DISABLED_MIN = 10_080;
+const POSTURE_DEFAULT_MIN = 30;
+const HYDRATE_DEFAULT_MIN = 60;
+
+const saveStatus = document.getElementById("save-status");
+let saveTimer = null;
+
 /**
- * @param {HTMLElement} input
+ * @param {number} hour
+ * @returns {string}
  */
-function flashSaved(input) {
-  const field = input.closest(".field");
-  if (!field) return;
+function hourToTimeValue(hour) {
+  const safe = Math.max(0, Math.min(23, Number(hour) || 0));
+  return `${String(safe).padStart(2, "0")}:00`;
+}
 
-  let indicator = field.querySelector(".saved-indicator");
-  if (!indicator) {
-    indicator = document.createElement("span");
-    indicator.className = "saved-indicator";
-    field.appendChild(indicator);
-  }
+/**
+ * @param {string} value
+ * @returns {number}
+ */
+function timeValueToHour(value) {
+  const [hour] = value.split(":");
+  return Number.parseInt(hour, 10) || 0;
+}
 
-  indicator.textContent = "Saved ✓";
-  indicator.hidden = false;
-  window.setTimeout(() => {
-    indicator.hidden = true;
-  }, 1500);
+/**
+ * @param {number} minutes
+ * @returns {boolean}
+ */
+function isReminderEnabled(minutes) {
+  return minutes > 0 && minutes < REMINDER_DISABLED_MIN;
+}
+
+function flashGlobalSaved() {
+  saveStatus.textContent = "Saving…";
+  saveStatus.classList.add("pending");
+  window.clearTimeout(saveTimer);
+  saveTimer = window.setTimeout(() => {
+    saveStatus.textContent = "✓ All saved";
+    saveStatus.classList.remove("pending");
+  }, 500);
 }
 
 /**
@@ -67,44 +89,116 @@ async function sendSetting(key, value) {
     type: "SET_SETTINGS",
     payload: { settings: { [key]: value } }
   });
+  flashGlobalSaved();
 }
 
 /**
  * @param {import('../utils/storage.js').Settings} settings
- * @returns {number|string|boolean}
  */
-function displayValueForInput(input, settings) {
-  const key = input.dataset.key;
-  const type = input.dataset.type;
-  const value = settings[key];
+function loadSettingsForm(settings) {
+  document.getElementById("daily-limit-hours").value =
+    String(settings.dailyLimitMs / 3_600_000);
 
-  if (type === "hours") {
-    return Number(value) / 3_600_000;
-  }
+  const breakInterval = document.getElementById("break-interval");
+  breakInterval.value = String(settings.breakIntervalMin);
+  document.getElementById("break-interval-value").textContent =
+    `${settings.breakIntervalMin} min`;
 
-  return value;
+  const breakDuration = document.getElementById("break-duration");
+  breakDuration.value = String(settings.breakDurationSec);
+  document.getElementById("break-duration-value").textContent =
+    `${settings.breakDurationSec} sec`;
+
+  document.getElementById("action-on-limit").value = settings.actionOnLimit;
+
+  const maxDb = document.getElementById("max-db");
+  maxDb.value = String(settings.maxDB);
+  document.getElementById("max-db-value").textContent = `${settings.maxDB} dB`;
+
+  const hearingWarn = document.getElementById("hearing-warn");
+  hearingWarn.value = String(settings.hearingWarnAt);
+  document.getElementById("hearing-warn-value").textContent =
+    `${settings.hearingWarnAt}%`;
+
+  document.getElementById("schedule-start").value =
+    hourToTimeValue(settings.scheduleStart);
+  document.getElementById("schedule-end").value =
+    hourToTimeValue(settings.scheduleEnd);
+  document.getElementById("blue-light-time").value =
+    hourToTimeValue(settings.blueLightHour);
+
+  document.getElementById("posture-enabled").checked =
+    isReminderEnabled(settings.postureIntervalMin);
+  document.getElementById("hydrate-enabled").checked =
+    isReminderEnabled(settings.hydrateIntervalMin);
+  document.getElementById("summary-enabled").checked =
+    settings.summaryEnabled !== false;
+  document.getElementById("auto-export").checked = Boolean(settings.autoExport);
 }
 
-/**
- * @param {HTMLInputElement | HTMLSelectElement} input
- * @returns {number|string|boolean}
- */
-function storageValueFromInput(input) {
-  const type = input.dataset.type;
+function bindSettingsForm() {
+  document.getElementById("daily-limit-hours").addEventListener("change", async (e) => {
+    const hours = Number(/** @type {HTMLInputElement} */ (e.target).value);
+    await sendSetting("dailyLimitMs", hours * 3_600_000);
+  });
 
-  if (type === "boolean") {
-    return /** @type {HTMLInputElement} */ (input).checked;
-  }
+  document.getElementById("break-interval").addEventListener("input", async (e) => {
+    const value = Number(/** @type {HTMLInputElement} */ (e.target).value);
+    document.getElementById("break-interval-value").textContent = `${value} min`;
+    await sendSetting("breakIntervalMin", value);
+  });
 
-  if (type === "hours") {
-    return Number(input.value) * 3_600_000;
-  }
+  document.getElementById("break-duration").addEventListener("input", async (e) => {
+    const value = Number(/** @type {HTMLInputElement} */ (e.target).value);
+    document.getElementById("break-duration-value").textContent = `${value} sec`;
+    await sendSetting("breakDurationSec", value);
+  });
 
-  if (type === "number") {
-    return Number(input.value);
-  }
+  document.getElementById("action-on-limit").addEventListener("change", async (e) => {
+    await sendSetting("actionOnLimit", /** @type {HTMLSelectElement} */ (e.target).value);
+  });
 
-  return input.value;
+  document.getElementById("max-db").addEventListener("input", async (e) => {
+    const value = Number(/** @type {HTMLInputElement} */ (e.target).value);
+    document.getElementById("max-db-value").textContent = `${value} dB`;
+    await sendSetting("maxDB", value);
+  });
+
+  document.getElementById("hearing-warn").addEventListener("input", async (e) => {
+    const value = Number(/** @type {HTMLInputElement} */ (e.target).value);
+    document.getElementById("hearing-warn-value").textContent = `${value}%`;
+    await sendSetting("hearingWarnAt", value);
+  });
+
+  document.getElementById("schedule-start").addEventListener("change", async (e) => {
+    await sendSetting("scheduleStart", timeValueToHour(/** @type {HTMLInputElement} */ (e.target).value));
+  });
+
+  document.getElementById("schedule-end").addEventListener("change", async (e) => {
+    await sendSetting("scheduleEnd", timeValueToHour(/** @type {HTMLInputElement} */ (e.target).value));
+  });
+
+  document.getElementById("blue-light-time").addEventListener("change", async (e) => {
+    await sendSetting("blueLightHour", timeValueToHour(/** @type {HTMLInputElement} */ (e.target).value));
+  });
+
+  document.getElementById("posture-enabled").addEventListener("change", async (e) => {
+    const enabled = /** @type {HTMLInputElement} */ (e.target).checked;
+    await sendSetting("postureIntervalMin", enabled ? POSTURE_DEFAULT_MIN : REMINDER_DISABLED_MIN);
+  });
+
+  document.getElementById("hydrate-enabled").addEventListener("change", async (e) => {
+    const enabled = /** @type {HTMLInputElement} */ (e.target).checked;
+    await sendSetting("hydrateIntervalMin", enabled ? HYDRATE_DEFAULT_MIN : REMINDER_DISABLED_MIN);
+  });
+
+  document.getElementById("summary-enabled").addEventListener("change", async (e) => {
+    await sendSetting("summaryEnabled", /** @type {HTMLInputElement} */ (e.target).checked);
+  });
+
+  document.getElementById("auto-export").addEventListener("change", async (e) => {
+    await sendSetting("autoExport", /** @type {HTMLInputElement} */ (e.target).checked);
+  });
 }
 
 /**
@@ -344,28 +438,8 @@ function downloadTextFile(filename, content, mimeType) {
 }
 
 const settings = await chrome.runtime.sendMessage({ type: "GET_SETTINGS" });
-
-document.querySelectorAll("[data-key]").forEach((input) => {
-  const element = /** @type {HTMLInputElement | HTMLSelectElement} */ (input);
-  const displayValue = displayValueForInput(element, settings);
-
-  if (element.dataset.type === "boolean") {
-    /** @type {HTMLInputElement} */ (element).checked = Boolean(displayValue);
-  } else {
-    element.value = String(displayValue);
-  }
-
-  const eventName = element.dataset.type === "boolean" || element.tagName === "SELECT"
-    ? "change"
-    : "input";
-
-  element.addEventListener(eventName, async () => {
-    const key = element.dataset.key;
-    const value = storageValueFromInput(element);
-    await sendSetting(key, value);
-    flashSaved(element);
-  });
-});
+loadSettingsForm(settings);
+bindSettingsForm();
 
 document.getElementById("btn-export-json").addEventListener("click", async () => {
   const response = await chrome.runtime.sendMessage({ type: "EXPORT_DATA" });

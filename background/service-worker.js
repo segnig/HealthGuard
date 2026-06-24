@@ -76,10 +76,14 @@ async function ensureAlarms() {
   await chrome.alarms.create(ALARM_BREAK, { periodInMinutes: settings.breakIntervalMin });
   await chrome.alarms.create(ALARM_POSTURE, { periodInMinutes: settings.postureIntervalMin });
   await chrome.alarms.create(ALARM_HYDRATE, { periodInMinutes: settings.hydrateIntervalMin });
-  await chrome.alarms.create(ALARM_SUMMARY, {
-    when: nextOccurrenceOf(21, 0),
-    periodInMinutes: 24 * 60
-  });
+  if (settings.summaryEnabled !== false) {
+    await chrome.alarms.create(ALARM_SUMMARY, {
+      when: nextOccurrenceOf(21, 0),
+      periodInMinutes: 24 * 60
+    });
+  } else {
+    await chrome.alarms.clear(ALARM_SUMMARY);
+  }
 }
 
 /**
@@ -362,6 +366,23 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       case "GET_SETTINGS":
         sendResponse(await Storage.getSettings());
         return;
+
+      case "GET_REMINDERS": {
+        const [breakAlarm, hydrateAlarm] = await Promise.all([
+          chrome.alarms.get(ALARM_BREAK),
+          chrome.alarms.get(ALARM_HYDRATE)
+        ]);
+        const now = Date.now();
+        sendResponse({
+          breakMs: breakAlarm?.scheduledTime
+            ? Math.max(0, breakAlarm.scheduledTime - now)
+            : null,
+          hydrateMs: hydrateAlarm?.scheduledTime
+            ? Math.max(0, hydrateAlarm.scheduledTime - now)
+            : null
+        });
+        return;
+      }
 
       case "SET_SETTINGS": {
         await Storage.setSettings(message.payload?.settings || {});

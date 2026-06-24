@@ -9,8 +9,11 @@
   <body>
     <header>
       <div class="header-brand">
-        <img src="../icons/icon32.png" alt="" width="32" height="32" />
-        <h1>HealthGuard</h1>
+        <img src="../icons/icon32.png" alt="" width="32" height="32" class="app-icon" />
+        <div class="header-text">
+          <h1>HealthGuard</h1>
+          <p id="status-label">Active · protecting you</p>
+        </div>
       </div>
       <label class="toggle" for="master-toggle" aria-label="Enable HealthGuard">
         <input type="checkbox" id="master-toggle" />
@@ -18,26 +21,36 @@
       </label>
     </header>
 
-    <section id="screen-section">
-      <h2>Screen time today</h2>
-      <div id="total-time"></div>
-      <div id="site-bars"></div>
-      <div class="limit-row">
-        <span id="limit-label"></span>
-        <progress id="limit-bar" max="100" value="0"></progress>
+    <section id="screen-section" class="card">
+      <h2>Screen Time Today</h2>
+      <div class="stat-row">
+        <div id="total-time" class="stat-value">—</div>
+        <div id="limit-caption" class="stat-caption">of — daily limit</div>
       </div>
+      <div class="limit-meta">
+        <span id="limit-used">— used</span>
+        <span id="limit-remaining">— remaining</span>
+      </div>
+      <progress id="limit-bar" max="100" value="0"></progress>
+      <div id="site-bars"></div>
     </section>
 
-    <section id="sound-section">
-      <h2>Hearing budget</h2>
-      <canvas id="dose-gauge" width="120" height="120"></canvas>
-      <p id="dose-label"></p>
+    <section id="sound-section" class="card">
+      <h2>Hearing Budget</h2>
+      <canvas id="dose-gauge" width="140" height="100"></canvas>
+      <p id="dose-caption" class="dose-caption">— of daily</p>
+      <p id="dose-label" class="dose-detail">—</p>
     </section>
 
-    <section id="controls">
-      <button id="btn-break" type="button">Take a break now</button>
+    <section id="reminders-section" class="card">
+      <h2>Next Reminders</h2>
+      <div id="reminders-list"></div>
+    </section>
+
+    <footer id="controls">
+      <button id="btn-break" type="button">Take a break</button>
       <button id="btn-options" type="button">Settings</button>
-    </section>
+    </footer>
 
     <script src="popup.js" type="module"></script>
   </body>

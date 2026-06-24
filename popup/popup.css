@@ -7,7 +7,7 @@ body {
   width: 320px;
   max-height: 480px;
   overflow-y: auto;
-  background: #ffffff;
+  background: #f1f5f9;
   color: #0f172a;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
@@ -17,7 +17,8 @@ header {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 16px;
+  padding: 14px 16px;
+  background: #ffffff;
   border-bottom: 1px solid #e2e8f0;
 }
 
@@ -28,11 +29,25 @@ header {
   min-width: 0;
 }
 
-header h1 {
+.app-icon {
+  border-radius: 8px;
+}
+
+.header-text h1 {
   margin: 0;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: #1e293b;
+}
+
+#status-label {
+  margin: 2px 0 0;
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+#status-label.paused {
+  color: #94a3b8;
 }
 
 .toggle {
@@ -78,105 +93,54 @@ header h1 {
   transform: translateX(20px);
 }
 
-section {
-  padding: 16px;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-section:last-of-type {
-  border-bottom: none;
+.card {
+  margin: 10px 12px 0;
+  padding: 14px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
 }
 
 h2 {
-  margin: 0 0 12px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  margin: 0 0 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #64748b;
 }
 
-#total-time {
-  margin-bottom: 14px;
-  font-size: 1.75rem;
+.stat-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 1.65rem;
   font-weight: 700;
   color: #1e293b;
   font-variant-numeric: tabular-nums;
 }
 
-#site-bars {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-
-#site-bars .site-bar {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-#site-bars .site-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+.stat-caption {
   font-size: 0.82rem;
-}
-
-#site-bars .site-domain {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: #334155;
-}
-
-#site-bars .site-duration {
-  flex-shrink: 0;
   color: #64748b;
-  font-variant-numeric: tabular-nums;
 }
 
-#site-bars .site-progress {
-  width: 100%;
-  height: 6px;
-  border: 0;
-  border-radius: 999px;
-  overflow: hidden;
-  appearance: none;
-  background: #e2e8f0;
-}
-
-#site-bars .site-progress::-webkit-progress-bar {
-  background: #e2e8f0;
-  border-radius: 999px;
-}
-
-#site-bars .site-progress::-webkit-progress-value {
-  background: #2563eb;
-  border-radius: 999px;
-}
-
-#site-bars .site-progress::-moz-progress-bar {
-  background: #2563eb;
-  border-radius: 999px;
-}
-
-.limit-row {
+.limit-meta {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-#limit-label {
-  font-size: 0.82rem;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 0.75rem;
   color: #64748b;
 }
 
 #limit-bar {
   width: 100%;
-  height: 8px;
+  height: 6px;
+  margin-bottom: 12px;
   border: 0;
   border-radius: 999px;
   overflow: hidden;
@@ -194,9 +158,63 @@ h2 {
   border-radius: 999px;
 }
 
+#limit-bar.warn::-webkit-progress-value {
+  background: #d97706;
+}
+
+#limit-bar.danger::-webkit-progress-value {
+  background: #dc2626;
+}
+
 #limit-bar::-moz-progress-bar {
   background: #1a56a0;
   border-radius: 999px;
+}
+
+#site-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.site-bar .site-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 3px;
+  font-size: 0.76rem;
+}
+
+.site-domain {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #334155;
+}
+
+.site-duration {
+  flex-shrink: 0;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+}
+
+.site-micro-bar {
+  height: 2px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.site-micro-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+}
+
+.site-empty {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #94a3b8;
 }
 
 #sound-section {
@@ -205,54 +223,125 @@ h2 {
 
 #dose-gauge {
   display: block;
-  margin: 0 auto 10px;
+  margin: 0 auto 4px;
 }
 
-#dose-label {
+.dose-caption {
+  margin: 0 0 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.dose-detail {
   margin: 0;
-  font-size: 0.9rem;
-  color: #475569;
-}
-
-#controls {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.site-empty {
-  margin: 0;
-  font-size: 0.85rem;
+  font-size: 0.76rem;
+  line-height: 1.45;
   color: #64748b;
 }
 
-button {
-  width: 100%;
+#reminders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reminder-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
-  padding: 10px 14px;
-  font-size: 0.92rem;
+  background: #f8fafc;
+}
+
+.reminder-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.reminder-icon.eye {
+  background: #dbeafe;
+}
+
+.reminder-icon.hydrate {
+  background: #dcfce7;
+}
+
+.reminder-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.reminder-title {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.reminder-countdown {
+  margin: 2px 0 0;
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.reminder-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.reminder-badge.soon {
+  color: #1d4ed8;
+  background: #dbeafe;
+}
+
+.reminder-badge.due {
+  color: #15803d;
+  background: #dcfce7;
+}
+
+#controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 12px;
+}
+
+button {
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.86rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 #btn-break {
-  border: 0;
-  background: #2563eb;
-  color: #ffffff;
+  border: 1.5px solid #2563eb;
+  background: #ffffff;
+  color: #2563eb;
 }
 
 #btn-break:hover {
-  background: #1d4ed8;
+  background: #eff6ff;
 }
 
 #btn-options {
   border: 1px solid #cbd5e1;
-  background: transparent;
+  background: #ffffff;
   color: #334155;
 }
 
 #btn-options:hover {
   background: #f8fafc;
-  border-color: #94a3b8;
 }
