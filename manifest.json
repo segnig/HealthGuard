@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "HealthGuard",
+  "version": "1.0.0",
+  "description": "Screen time and hearing health assistant.",
+  "permissions": [
+    "tabs",
+    "activeTab",
+    "alarms",
+    "storage",
+    "notifications",
+    "scripting",
+    "idle"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup/popup.html"
+  },
+  "options_page": "options/options.html",
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content/content.js"
+      ],
+      "css": [
+        "content/overlay.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}

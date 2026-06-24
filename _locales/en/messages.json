@@ -1,0 +1,14 @@
+{
+  "extName": {
+    "message": "HealthGuard"
+  },
+  "extDescription": {
+    "message": "Chrome extension for screen time management and hearing health."
+  },
+  "breakTitle": {
+    "message": "Time for an eye break"
+  },
+  "breakBody": {
+    "message": "Look 20 feet away for 20 seconds."
+  }
+}
