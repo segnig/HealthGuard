@@ -184,14 +184,17 @@ export const Storage = {
    */
   async addTime(domain, ms) {
     const safeMs = Number.isFinite(ms) ? Math.max(0, ms) : 0;
-    const today = await Storage.getToday();
-    const siteTimes = { ...today.siteTimes };
+    await Storage.getToday();
+
+    const { today: current } = await chrome.storage.local.get("today");
+    const base = current ?? freshToday();
+    const siteTimes = { ...(base.siteTimes || {}) };
     siteTimes[domain] = (siteTimes[domain] || 0) + safeMs;
 
     const updated = {
-      ...today,
+      ...base,
       siteTimes,
-      totalMs: today.totalMs + safeMs
+      totalMs: (base.totalMs || 0) + safeMs
     };
 
     await chrome.storage.local.set({ today: updated });
@@ -205,10 +208,13 @@ export const Storage = {
    */
   async addSoundDose(delta) {
     const safeDelta = Number.isFinite(delta) ? Math.max(0, delta) : 0;
-    const today = await Storage.getToday();
+    await Storage.getToday();
+
+    const { today: current } = await chrome.storage.local.get("today");
+    const base = current ?? freshToday();
     const updated = {
-      ...today,
-      soundDose: today.soundDose + safeDelta
+      ...base,
+      soundDose: (base.soundDose || 0) + safeDelta
     };
 
     await chrome.storage.local.set({ today: updated });

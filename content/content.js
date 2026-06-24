@@ -15,6 +15,7 @@ let lastMeasureTime = performance.now();
 let countdownTimer = null;
 
 function hookMediaElement(el) {
+  if (!(el instanceof HTMLMediaElement)) return;
   if (el._hg_hooked) return;
 
   el._hg_hooked = true;
@@ -57,6 +58,17 @@ if (ctx.state === "suspended") {
   document.addEventListener("keydown", resume, { once: true });
 }
 
+const DEFAULT_MAX_DB = 85;
+window._hg_settings = { maxDB: DEFAULT_MAX_DB };
+
+chrome.runtime.sendMessage({ type: "GET_SETTINGS" })
+  .then((settings) => {
+    if (settings && typeof settings.maxDB === "number") {
+      window._hg_settings.maxDB = settings.maxDB;
+    }
+  })
+  .catch(() => {});
+
 function measureLoop() {
   const now = performance.now();
   const durationMs = now - lastMeasureTime;
@@ -80,7 +92,7 @@ function measureLoop() {
     }).catch(() => {});
   }
 
-  const maxDB = window._hg_settings?.maxDB ?? 85;
+  const maxDB = window._hg_settings?.maxDB ?? DEFAULT_MAX_DB;
   const capGain = dB > maxDB ? Math.pow(10, (maxDB - dB) / 20) : 1;
   gain.gain.setTargetAtTime(capGain, ctx.currentTime, 0.1);
 
@@ -106,9 +118,17 @@ const BREAK_COPY = {
     title: "Posture Check",
     body: "Sit up straight, feet flat, monitor at eye level."
   },
+  scheduled: {
+    title: "Eye Break",
+    body: "Look at something 20 feet away for 20 seconds."
+  },
   manual: {
     title: "Take a Break",
     body: "Step away from the screen for a moment."
+  },
+  block: {
+    title: "Time limit reached",
+    body: "You have reached your screen time limit. Take a break before continuing."
   }
 };
 
@@ -171,4 +191,7 @@ function showOverlay({ reason, durationSec } = {}) {
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg.type === "SHOW_BREAK") showOverlay(msg.payload);
   if (msg.type === "HIDE_BREAK") removeOverlay();
+  if (msg.type === "SHOW_BLOCK") {
+    showOverlay({ reason: "block", durationSec: msg.payload?.durationSec ?? 30 });
+  }
 });

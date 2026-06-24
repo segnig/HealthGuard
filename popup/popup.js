@@ -26,11 +26,13 @@ function drawDoseGauge(canvas, pct, color) {
   ctx.stroke();
 
   const startAngle = -Math.PI / 2;
-  const endAngle = startAngle + (safePct / 100) * Math.PI * 2;
-  ctx.strokeStyle = color;
-  ctx.beginPath();
-  ctx.arc(center, center, radius, startAngle, endAngle);
-  ctx.stroke();
+  if (safePct > 0) {
+    const endAngle = startAngle + (safePct / 100) * Math.PI * 2;
+    ctx.strokeStyle = color;
+    ctx.beginPath();
+    ctx.arc(center, center, radius, startAngle, endAngle);
+    ctx.stroke();
+  }
 
   ctx.fillStyle = "#1e293b";
   ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
@@ -62,6 +64,13 @@ const topSites = Object.entries(today.siteTimes || {})
   .sort((a, b) => b[1] - a[1])
   .slice(0, 5);
 
+if (!topSites.length) {
+  const empty = document.createElement("p");
+  empty.className = "site-empty";
+  empty.textContent = "No site activity yet today.";
+  siteBars.appendChild(empty);
+}
+
 for (const [domain, ms] of topSites) {
   const bar = document.createElement("div");
   bar.className = "site-bar";
@@ -88,16 +97,21 @@ for (const [domain, ms] of topSites) {
   siteBars.appendChild(bar);
 }
 
-const limitPct = Math.min(100, (today.totalMs / settings.dailyLimitMs) * 100);
+const limitPct = settings.dailyLimitMs > 0
+  ? Math.min(100, (today.totalMs / settings.dailyLimitMs) * 100)
+  : 0;
 document.getElementById("limit-bar").value = limitPct;
 
-const remainingMs = settings.dailyLimitMs - today.totalMs;
+const remainingMs = settings.dailyLimitMs - (today.totalMs || 0);
 document.getElementById("limit-label").textContent =
   remainingMs > 0 ? `${formatMs(remainingMs)} remaining` : "Limit reached";
 
+const doseGauge = document.getElementById("dose-gauge");
 const dosePct = getDosePercent(today.soundDose || 0);
 const { label, color } = doseSeverity(dosePct);
-drawDoseGauge(document.getElementById("dose-gauge"), dosePct, color);
+if (doseGauge) {
+  drawDoseGauge(doseGauge, dosePct, color);
+}
 document.getElementById("dose-label").textContent = label;
 
 document.getElementById("btn-break").addEventListener("click", () => {

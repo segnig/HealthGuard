@@ -2,14 +2,19 @@
   "manifest_version": 3,
   "name": "HealthGuard",
   "version": "1.0.0",
-  "description": "Screen time and hearing health assistant.",
+  "description": "Track screen time, protect hearing, and build healthier browsing habits. All data stays on your device.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "permissions": [
     "tabs",
     "activeTab",
     "alarms",
     "storage",
     "notifications",
-    "scripting",
     "idle"
   ],
   "host_permissions": [

@@ -220,6 +220,12 @@ h2 {
   gap: 10px;
 }
 
+.site-empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
 button {
   width: 100%;
   border-radius: 10px;

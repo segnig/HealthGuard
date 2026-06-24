@@ -125,6 +125,20 @@ function chronologicalLogs(logs) {
 }
 
 /**
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} width
+ * @param {number} height
+ * @param {string} message
+ */
+function drawEmptyChartMessage(ctx, width, height, message) {
+  ctx.fillStyle = "#64748b";
+  ctx.font = "14px sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(message, width / 2, height / 2);
+}
+
+/**
  * @param {HTMLCanvasElement} canvas
  * @param {import('../utils/storage.js').TodayRecord[]} logs
  */
@@ -142,12 +156,15 @@ function drawWeeklyChart(canvas, logs) {
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, width, height);
 
+  if (!logs.length) {
+    drawEmptyChartMessage(ctx, width, height, "No weekly data yet");
+    return;
+  }
+
   const values = logs.map((log) => (log.totalMs || 0) / 3_600_000);
   const maxHours = Math.max(1, ...values, 0.25);
-  const barGap = 16;
-  const barWidth = logs.length
-    ? (chartWidth - barGap * (logs.length - 1)) / logs.length
-    : chartWidth;
+  const barGap = logs.length > 1 ? 16 : 0;
+  const barWidth = (chartWidth - barGap * (logs.length - 1)) / logs.length;
 
   ctx.strokeStyle = "#e2e8f0";
   ctx.lineWidth = 1;
@@ -201,6 +218,11 @@ function drawSoundChart(canvas, logs) {
   ctx.clearRect(0, 0, width, height);
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, width, height);
+
+  if (!logs.length) {
+    drawEmptyChartMessage(ctx, width, height, "No sound history yet");
+    return;
+  }
 
   const points = logs.map((log) => ({
     date: log.date,
@@ -279,6 +301,11 @@ function drawSoundChart(canvas, logs) {
 function renderHeatmap(logs) {
   const heatmap = document.getElementById("heatmap");
   heatmap.innerHTML = "";
+
+  if (!logs.length) {
+    heatmap.textContent = "No sound history yet";
+    return;
+  }
 
   chronologicalLogs(logs).forEach((log) => {
     const pct = Math.min(100, Math.round((log.soundDose || 0) * 100));
