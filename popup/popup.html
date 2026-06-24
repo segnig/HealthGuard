@@ -1,1 +1,44 @@
-<!-- popup.html placeholder -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HealthGuard</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <div class="header-brand">
+        <img src="../icons/icon32.png" alt="" width="32" height="32" />
+        <h1>HealthGuard</h1>
+      </div>
+      <label class="toggle" for="master-toggle" aria-label="Enable HealthGuard">
+        <input type="checkbox" id="master-toggle" />
+        <span class="toggle-track"></span>
+      </label>
+    </header>
+
+    <section id="screen-section">
+      <h2>Screen time today</h2>
+      <div id="total-time"></div>
+      <div id="site-bars"></div>
+      <div class="limit-row">
+        <span id="limit-label"></span>
+        <progress id="limit-bar" max="100" value="0"></progress>
+      </div>
+    </section>
+
+    <section id="sound-section">
+      <h2>Hearing budget</h2>
+      <canvas id="dose-gauge" width="120" height="120"></canvas>
+      <p id="dose-label"></p>
+    </section>
+
+    <section id="controls">
+      <button id="btn-break" type="button">Take a break now</button>
+      <button id="btn-options" type="button">Settings</button>
+    </section>
+
+    <script src="popup.js" type="module"></script>
+  </body>
+</html>
