@@ -1,4 +1,5 @@
 import { doseSeverity, getDosePercent } from "../utils/audio-analyser.js";
+import { computeHealthScore, scoreSeverity } from "../utils/health-score.js";
 import { formatMs } from "../utils/time-utils.js";
 
 const SITE_COLORS = ["#1A56A0", "#2563EB", "#3B82F6", "#60A5FA"];
@@ -119,9 +120,44 @@ const [today, settings, reminders] = await Promise.all([
 const masterToggle = document.getElementById("master-toggle");
 const statusLabel = document.getElementById("status-label");
 
+/**
+ * Mirrors the service worker's active-hours logic so the popup can explain a
+ * scheduled pause instead of silently showing zero activity.
+ * @param {number} hour
+ * @returns {string}
+ */
+function formatHour(hour) {
+  const safe = ((Math.round(hour) % 24) + 24) % 24;
+  const period = safe < 12 ? "AM" : "PM";
+  const display = safe % 12 === 0 ? 12 : safe % 12;
+  return `${display} ${period}`;
+}
+
+function withinActiveHours(now = new Date()) {
+  const start = Number.isFinite(settings.scheduleStart) ? settings.scheduleStart : 0;
+  const end = Number.isFinite(settings.scheduleEnd) ? settings.scheduleEnd : 24;
+  if (start === end) return true;
+  const hour = now.getHours();
+  return start < end ? hour >= start && hour < end : hour >= start || hour < end;
+}
+
 function updateStatus(enabled) {
-  statusLabel.textContent = enabled ? "Active · protecting you" : "Paused · not tracking";
-  statusLabel.classList.toggle("paused", !enabled);
+  let text;
+  let paused;
+
+  if (!enabled) {
+    text = "Paused · not tracking";
+    paused = true;
+  } else if (!withinActiveHours()) {
+    text = `Paused · active ${formatHour(settings.scheduleStart)}–${formatHour(settings.scheduleEnd)}`;
+    paused = true;
+  } else {
+    text = "Active · protecting you";
+    paused = false;
+  }
+
+  statusLabel.textContent = text;
+  statusLabel.classList.toggle("paused", paused);
 }
 
 masterToggle.checked = Boolean(settings.enabled);
@@ -135,6 +171,17 @@ masterToggle.addEventListener("change", () => {
     payload: { settings: { enabled } }
   });
 });
+
+const healthScore = computeHealthScore(today, settings);
+const scoreMeta = scoreSeverity(healthScore);
+const scoreEl = document.getElementById("health-score");
+scoreEl.textContent = String(healthScore);
+scoreEl.style.color = scoreMeta.color;
+document.getElementById("score-detail").textContent =
+  `${scoreMeta.label} · breaks, limits & hearing combined.`;
+const scoreRing = document.querySelector(".score-ring");
+scoreRing.style.setProperty("--score-color", scoreMeta.color);
+scoreRing.style.setProperty("--score-pct", String(healthScore));
 
 document.getElementById("total-time").textContent = formatMs(today.totalMs || 0);
 document.getElementById("limit-caption").textContent =

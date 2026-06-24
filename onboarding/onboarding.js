@@ -126,6 +126,7 @@ function bindRangeDisplay(rangeId, valueId, suffix) {
 
 bindRangeDisplay("max-db", "max-db-value", " dB");
 bindRangeDisplay("hearing-warn-at", "hearing-warn-at-value", "%");
+bindRangeDisplay("break-interval-min", "break-interval-value", " min");
 
 prevBtn.addEventListener("click", () => {
   if (currentStep > 1) {

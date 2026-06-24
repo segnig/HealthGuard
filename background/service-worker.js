@@ -1,5 +1,6 @@
 import { Storage } from "../utils/storage.js";
 import * as AudioAnalyser from "../utils/audio-analyser.js";
+import { computeHealthScore } from "../utils/health-score.js";
 import {
   domainOf as extractDomain,
   formatMs,
@@ -12,6 +13,10 @@ const ALARM_BREAK = "hg_break";
 const ALARM_POSTURE = "hg_posture";
 const ALARM_HYDRATE = "hg_hydrate";
 const ALARM_SUMMARY = "hg_summary";
+const ALARM_BLUELIGHT = "hg_bluelight";
+const ALARM_AUTOEXPORT = "hg_autoexport";
+
+const IDLE_DETECTION_SECONDS = 60;
 
 /** @type {Record<string, { startTime: number | null, accumulatedMs: number }>} */
 let sessionMap = {};
@@ -24,6 +29,50 @@ let activeDomain = null;
 
 /** @type {boolean} */
 let isIdle = false;
+
+/**
+ * Cached copy of settings so synchronous hot paths (startTimer) can consult the
+ * pause toggle and active-hours schedule without an async storage read.
+ * @type {import('../utils/storage.js').Settings | null}
+ */
+let cachedSettings = null;
+
+/**
+ * Refreshes and returns the cached settings.
+ * @returns {Promise<import('../utils/storage.js').Settings>}
+ */
+async function refreshSettings() {
+  cachedSettings = await Storage.getSettings();
+  return cachedSettings;
+}
+
+/**
+ * Whether the current local time falls inside the configured active-hours
+ * window. Equal start/end means "always on"; start > end spans midnight.
+ * @param {import('../utils/storage.js').Settings} settings
+ * @param {Date} [now]
+ * @returns {boolean}
+ */
+function withinActiveHours(settings, now = new Date()) {
+  const start = Number.isFinite(settings.scheduleStart) ? settings.scheduleStart : 0;
+  const end = Number.isFinite(settings.scheduleEnd) ? settings.scheduleEnd : 24;
+  if (start === end) return true;
+
+  const hour = now.getHours();
+  return start < end ? hour >= start && hour < end : hour >= start || hour < end;
+}
+
+/**
+ * Whether HealthGuard should be actively tracking/reminding right now:
+ * the master toggle is on and we are inside active hours.
+ * @param {import('../utils/storage.js').Settings | null} [settings]
+ * @returns {boolean}
+ */
+function shouldTrackNow(settings = cachedSettings) {
+  if (!settings) return true;
+  if (!settings.enabled) return false;
+  return withinActiveHours(settings);
+}
 
 /**
  * Extracts a normalized domain from a tab URL.
@@ -40,6 +89,7 @@ function domainOf(url) {
  */
 function startTimer(domain) {
   if (!domain || isIdle) return;
+  if (!shouldTrackNow()) return;
 
   if (!sessionMap[domain]) {
     sessionMap[domain] = { startTime: null, accumulatedMs: 0 };
@@ -76,6 +126,18 @@ async function ensureAlarms() {
   await chrome.alarms.create(ALARM_BREAK, { periodInMinutes: settings.breakIntervalMin });
   await chrome.alarms.create(ALARM_POSTURE, { periodInMinutes: settings.postureIntervalMin });
   await chrome.alarms.create(ALARM_HYDRATE, { periodInMinutes: settings.hydrateIntervalMin });
+
+  await chrome.alarms.create(ALARM_BLUELIGHT, {
+    when: nextOccurrenceOf(settings.blueLightHour ?? 20, 0),
+    periodInMinutes: 24 * 60
+  });
+
+  if (settings.autoExport) {
+    await chrome.alarms.create(ALARM_AUTOEXPORT, { periodInMinutes: 7 * 24 * 60 });
+  } else {
+    await chrome.alarms.clear(ALARM_AUTOEXPORT);
+  }
+
   if (settings.summaryEnabled !== false) {
     await chrome.alarms.create(ALARM_SUMMARY, {
       when: nextOccurrenceOf(21, 0),
@@ -83,6 +145,25 @@ async function ensureAlarms() {
     });
   } else {
     await chrome.alarms.clear(ALARM_SUMMARY);
+  }
+}
+
+/**
+ * Downloads the full archived history as a JSON file (weekly auto-export).
+ * Uses a data: URL because service workers have no DOM/Blob URL support.
+ * @returns {Promise<void>}
+ */
+async function autoExport() {
+  try {
+    const json = await Storage.exportJSON();
+    const url = `data:application/json;charset=utf-8,${encodeURIComponent(json)}`;
+    await chrome.downloads.download({
+      url,
+      filename: `healthguard/healthguard-export-${todayKey()}.json`,
+      saveAs: false
+    });
+  } catch (error) {
+    console.warn("HealthGuard auto-export failed", error);
   }
 }
 
@@ -177,14 +258,18 @@ async function checkLimits() {
 
   if (!settings.enabled) return;
 
-  if (today.totalMs >= settings.dailyLimitMs) {
+  const triggered = today.limitsTriggered || { total: false, sites: {} };
+
+  if (today.totalMs >= settings.dailyLimitMs && !triggered.total) {
     await triggerAction("total_limit", settings.actionOnLimit);
+    await Storage.markLimitTriggered("total");
   }
 
   for (const [domain, limitMs] of Object.entries(settings.siteLimits)) {
     const usedMs = today.siteTimes[domain] || 0;
-    if (usedMs >= limitMs) {
+    if (usedMs >= limitMs && !triggered.sites?.[domain]) {
       await triggerAction("site_limit", settings.actionOnLimit, domain);
+      await Storage.markLimitTriggered(domain);
     }
   }
 
@@ -223,12 +308,17 @@ async function triggerBreak(type) {
  * @returns {Promise<void>}
  */
 async function sendDailySummary() {
-  const today = await Storage.getToday();
+  const [today, settings] = await Promise.all([
+    Storage.getToday(),
+    Storage.getSettings()
+  ]);
   const dosePercent = AudioAnalyser.getDosePercent(today.soundDose);
+  const score = computeHealthScore(today, settings);
   const summary = [
+    `Health score: ${score}/100`,
     `Screen time: ${formatMs(today.totalMs)}`,
-    `Breaks taken: ${today.breakCount}`,
-    `Hearing dose: ${dosePercent}%`
+    `Breaks: ${today.breakCount}`,
+    `Hearing: ${dosePercent}%`
   ].join(" • ");
 
   await sendNotification("HealthGuard daily summary", summary);
@@ -247,7 +337,8 @@ async function resetToday() {
       siteTimes: {},
       soundDose: 0,
       hearingWarned: false,
-      breakCount: 0
+      breakCount: 0,
+      limitsTriggered: { total: false, sites: {} }
     }
   });
 }
@@ -285,11 +376,37 @@ chrome.runtime.onInstalled.addListener(async ({ reason }) => {
     });
   }
 
+  chrome.idle.setDetectionInterval(IDLE_DETECTION_SECONDS);
+  await refreshSettings();
+  await ensureAlarms();
+});
+
+chrome.runtime.onStartup.addListener(async () => {
+  chrome.idle.setDetectionInterval(IDLE_DETECTION_SECONDS);
+  await refreshSettings();
   await ensureAlarms();
 });
 
 chrome.tabs.onActivated.addListener(async ({ tabId }) => {
   await activateTab(tabId);
+});
+
+chrome.windows.onFocusChanged.addListener(async (windowId) => {
+  // Browser lost focus (minimized or another app in front): stop counting.
+  if (windowId === chrome.windows.WINDOW_ID_NONE) {
+    await pauseCurrent();
+    return;
+  }
+
+  // Focus returned: resume tracking the active tab of the focused window.
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, windowId });
+    if (tab?.id != null) {
+      await activateTab(tab.id);
+    }
+  } catch {
+    // Window may have closed before we could query it.
+  }
 });
 
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
@@ -323,6 +440,8 @@ chrome.idle.onStateChanged.addListener(async (idleState) => {
 });
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
+  const settings = await refreshSettings();
+
   switch (alarm.name) {
     case ALARM_FLUSH:
       await flushSessionToStorage();
@@ -330,21 +449,42 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
       break;
 
     case ALARM_BREAK:
-      await triggerBreak("scheduled");
+      if (shouldTrackNow(settings)) {
+        await triggerBreak("scheduled");
+      }
       break;
 
     case ALARM_POSTURE:
-      await sendNotification(
-        "Posture check",
-        "Sit upright with feet flat, monitor at eye level, and elbows near 90 degrees."
-      );
+      if (shouldTrackNow(settings)) {
+        await sendNotification(
+          "Posture check",
+          "Sit upright with feet flat, monitor at eye level, and elbows near 90 degrees."
+        );
+      }
       break;
 
     case ALARM_HYDRATE:
-      await sendNotification(
-        "Hydration reminder",
-        "Time to drink water."
-      );
+      if (shouldTrackNow(settings)) {
+        await sendNotification(
+          "Hydration reminder",
+          "Time to drink water."
+        );
+      }
+      break;
+
+    case ALARM_BLUELIGHT:
+      if (settings.enabled) {
+        await sendNotification(
+          "Blue light reminder",
+          "It's getting late. Consider enabling night mode or a blue-light filter to protect your sleep."
+        );
+      }
+      break;
+
+    case ALARM_AUTOEXPORT:
+      if (settings.autoExport) {
+        await autoExport();
+      }
       break;
 
     case ALARM_SUMMARY:
@@ -386,7 +526,24 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
       case "SET_SETTINGS": {
         await Storage.setSettings(message.payload?.settings || {});
+        await refreshSettings();
         await ensureAlarms();
+
+        // Re-evaluate tracking immediately so the pause toggle / schedule take
+        // effect without waiting for the next flush tick.
+        if (shouldTrackNow()) {
+          if (activeDomain) startTimer(activeDomain);
+        } else {
+          await pauseCurrent();
+        }
+
+        sendResponse({ ok: true });
+        return;
+      }
+
+      case "SET_SITE_LIMITS": {
+        await Storage.setSiteLimits(message.payload?.siteLimits || {});
+        await refreshSettings();
         sendResponse({ ok: true });
         return;
       }
@@ -397,7 +554,20 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         return;
 
       case "SOUND_EXPOSURE": {
+        const settings = cachedSettings || (await refreshSettings());
         const today = await Storage.getToday();
+
+        // When paused, don't accumulate dose; still report the current dose so
+        // the content script can keep applying the right volume cap.
+        if (!settings.enabled) {
+          sendResponse({
+            ok: true,
+            soundDose: today.soundDose,
+            dosePercent: AudioAnalyser.getDosePercent(today.soundDose)
+          });
+          return;
+        }
+
         const { dB, durationMs } = message.payload || {};
         const newDose = AudioAnalyser.addExposure(today.soundDose, dB, durationMs);
         const delta = newDose - today.soundDose;
@@ -433,3 +603,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
   return true;
 });
+
+// Warm the settings cache as soon as the worker spins up so synchronous hot
+// paths (startTimer) observe the pause toggle and schedule from the first tick.
+refreshSettings().catch(() => {});

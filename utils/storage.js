@@ -34,7 +34,8 @@ function freshToday() {
     siteTimes: {},
     soundDose: 0,
     hearingWarned: false,
-    breakCount: 0
+    breakCount: 0,
+    limitsTriggered: { total: false, sites: {} }
   };
 }
 
@@ -246,6 +247,25 @@ export const Storage = {
   },
 
   /**
+   * Replaces the per-site limits map wholesale.
+   *
+   * `setSettings` deep-merges nested objects, so it can add but never remove a
+   * site limit. This setter assigns the map directly so removals persist.
+   * @param {Record<string, number>} siteLimits
+   * @returns {Promise<import('./storage.js').Settings>}
+   */
+  async setSiteLimits(siteLimits) {
+    const current = await Storage.getSettings();
+    const clean = {};
+    for (const [domain, ms] of Object.entries(siteLimits || {})) {
+      if (domain && Number.isFinite(ms) && ms > 0) clean[domain] = ms;
+    }
+    const merged = { ...current, siteLimits: clean };
+    await chrome.storage.local.set({ settings: merged });
+    return merged;
+  },
+
+  /**
    * Writes default settings when none are stored yet.
    * @returns {Promise<import('./storage.js').Settings>}
    */
@@ -276,6 +296,31 @@ export const Storage = {
       [key]: value
     };
 
+    await chrome.storage.local.set({ today: updated });
+    return updated;
+  },
+
+  /**
+   * Marks a screen-time limit as already actioned today so its notify/overlay/
+   * block action fires only once per day instead of on every flush tick.
+   * @param {'total' | string} scope - "total" for the daily limit, otherwise a domain.
+   * @returns {Promise<import('./storage.js').TodayRecord>}
+   */
+  async markLimitTriggered(scope) {
+    const today = await Storage.getToday();
+    const triggered = {
+      total: false,
+      sites: {},
+      ...(today.limitsTriggered || {})
+    };
+
+    if (scope === "total") {
+      triggered.total = true;
+    } else {
+      triggered.sites = { ...triggered.sites, [scope]: true };
+    }
+
+    const updated = { ...today, limitsTriggered: triggered };
     await chrome.storage.local.set({ today: updated });
     return updated;
   },
@@ -360,6 +405,7 @@ export const Storage = {
  * @property {number} soundDose
  * @property {boolean} hearingWarned
  * @property {number} breakCount
+ * @property {{ total: boolean, sites: Record<string, boolean> }} [limitsTriggered]
  */
 
 /**

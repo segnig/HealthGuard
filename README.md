@@ -239,8 +239,8 @@ Open the options page via popup -> **Settings**, or right-click the extension ic
 | `alarms` | 30-second flush ticks and break scheduling |
 | `storage` | Persist today's data and user settings locally |
 | `notifications` | Show break reminders and health alerts |
-| `scripting` | Inject the break overlay into the active page |
 | `idle` | Pause the timer when you step away |
+| `downloads` | Save the weekly auto-export JSON to your Downloads folder |
 | `host_permissions: <all_urls>` | Required to inject `content.js` for audio monitoring on any site |
 
 ---

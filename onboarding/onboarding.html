@@ -4,172 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Welcome to HealthGuard</title>
-    <style>
-      * {
-        box-sizing: border-box;
-      }
-
-      body {
-        margin: 0;
-        min-height: 100vh;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background: linear-gradient(180deg, #eff6ff 0%, #f8fafc 100%);
-        color: #0f172a;
-      }
-
-      .wizard {
-        max-width: 640px;
-        margin: 0 auto;
-        padding: 40px 24px 32px;
-      }
-
-      .progress {
-        display: flex;
-        justify-content: center;
-        gap: 12px;
-        margin-bottom: 28px;
-      }
-
-      .progress-dot {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        border: 2px solid #cbd5e1;
-        display: grid;
-        place-items: center;
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: #64748b;
-        background: #fff;
-      }
-
-      .progress-dot.active {
-        border-color: #2563eb;
-        color: #2563eb;
-      }
-
-      .progress-dot.complete {
-        border-color: #2563eb;
-        background: #2563eb;
-        color: #fff;
-      }
-
-      .card {
-        background: #fff;
-        border-radius: 16px;
-        padding: 28px;
-        box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
-      }
-
-      .step {
-        display: none;
-      }
-
-      .step.active {
-        display: block;
-      }
-
-      h1 {
-        margin: 0 0 12px;
-        font-size: 1.6rem;
-      }
-
-      p {
-        margin: 0 0 16px;
-        line-height: 1.6;
-        color: #475569;
-      }
-
-      .field {
-        display: grid;
-        gap: 8px;
-        margin-bottom: 16px;
-      }
-
-      label {
-        font-size: 0.92rem;
-        color: #334155;
-        font-weight: 600;
-      }
-
-      input[type="number"],
-      input[type="time"] {
-        padding: 10px 12px;
-        border: 1px solid #cbd5e1;
-        border-radius: 8px;
-        font-size: 1rem;
-      }
-
-      input[type="range"] {
-        width: 100%;
-      }
-
-      .range-value {
-        font-size: 0.9rem;
-        color: #1a56a0;
-        font-weight: 600;
-      }
-
-      .explainer {
-        padding: 12px 14px;
-        border-radius: 10px;
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        font-size: 0.92rem;
-        color: #475569;
-      }
-
-      .toggle-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 12px;
-      }
-
-      #summary-list {
-        margin: 0 0 20px;
-        padding-left: 20px;
-        color: #334155;
-        line-height: 1.7;
-      }
-
-      .nav {
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
-        margin-top: 24px;
-      }
-
-      button {
-        border-radius: 10px;
-        padding: 10px 18px;
-        font-size: 0.95rem;
-        font-weight: 600;
-        cursor: pointer;
-      }
-
-      #btn-prev {
-        border: 1px solid #cbd5e1;
-        background: #fff;
-        color: #334155;
-      }
-
-      #btn-prev:disabled {
-        opacity: 0.45;
-        cursor: not-allowed;
-      }
-
-      #btn-next {
-        border: 0;
-        background: #2563eb;
-        color: #fff;
-        margin-left: auto;
-      }
-    </style>
+    <link rel="stylesheet" href="onboarding.css" />
   </head>
   <body>
-    <div class="wizard">
+    <header class="hg-header">
+      <div class="header-brand">
+        <img src="../icons/icon32.png" alt="" width="32" height="32" class="app-icon" />
+        <div>
+          <h1>HealthGuard</h1>
+          <p class="header-subtitle">Setup wizard</p>
+        </div>
+      </div>
+    </header>
+
+    <main class="onboarding-main">
       <div class="progress" aria-label="Onboarding progress">
         <div class="progress-dot active" data-step="1">1</div>
         <div class="progress-dot" data-step="2">2</div>
@@ -178,28 +26,34 @@
         <div class="progress-dot" data-step="5">5</div>
       </div>
 
-      <div class="card">
+      <article class="hg-card wizard-card">
         <div class="step active" data-step="1">
           <h1>Welcome to HealthGuard</h1>
           <p>
-            HealthGuard helps you build healthier digital habits with two core systems:
-            screen time management that tracks usage and prompts restorative breaks,
-            and sound protection that monitors loudness and helps protect your hearing.
+            HealthGuard helps you build healthier digital habits with screen time
+            tracking, restorative breaks, and sound protection that monitors loudness
+            on the pages you visit.
           </p>
-          <p>Everything stays on your device. No accounts, no cloud, no tracking.</p>
+          <p class="hg-callout">Everything stays on your device. No accounts, no cloud, no tracking.</p>
         </div>
 
         <div class="step" data-step="2">
           <h1>Set your screen time limits</h1>
           <div class="field">
-            <label for="daily-limit-hours">Daily screen time limit (hours)</label>
-            <input type="number" id="daily-limit-hours" min="0.5" step="0.5" value="4" />
+            <label for="daily-limit-hours">Daily screen time limit</label>
+            <div class="inline-input">
+              <input type="number" id="daily-limit-hours" min="0.5" step="0.5" value="4" />
+              <span>hours</span>
+            </div>
           </div>
           <div class="field">
-            <label for="break-interval-min">Break interval (minutes)</label>
-            <input type="number" id="break-interval-min" min="1" value="20" />
+            <label for="break-interval-min">Break interval</label>
+            <div class="slider-row">
+              <input type="range" id="break-interval-min" min="5" max="60" step="1" value="20" />
+              <span class="range-value" id="break-interval-value">20 min</span>
+            </div>
           </div>
-          <p class="explainer">
+          <p class="hg-callout">
             The 20-20-20 rule: every 20 minutes, look 20 feet away for 20 seconds.
           </p>
         </div>
@@ -207,16 +61,20 @@
         <div class="step" data-step="3">
           <h1>Protect your hearing</h1>
           <div class="field">
-            <label for="max-db">Max sound level</label>
-            <input type="range" id="max-db" min="60" max="100" value="85" />
-            <span class="range-value" id="max-db-value">85 dB</span>
+            <label for="max-db">Volume ceiling</label>
+            <div class="slider-row">
+              <input type="range" id="max-db" min="60" max="100" value="85" />
+              <span class="range-value" id="max-db-value">85 dB</span>
+            </div>
           </div>
           <div class="field">
-            <label for="hearing-warn-at">Hearing budget warning</label>
-            <input type="range" id="hearing-warn-at" min="50" max="100" value="80" />
-            <span class="range-value" id="hearing-warn-at-value">80%</span>
+            <label for="hearing-warn-at">Budget warning at</label>
+            <div class="slider-row">
+              <input type="range" id="hearing-warn-at" min="50" max="100" value="80" />
+              <span class="range-value" id="hearing-warn-at-value">80%</span>
+            </div>
           </div>
-          <p class="explainer">
+          <p class="hg-callout">
             WHO safe listening guidance: exposure at 85 dB for about 8 hours per day
             is the reference limit. HealthGuard tracks your daily hearing dose and warns
             you before you exceed a safe budget.
@@ -226,20 +84,26 @@
         <div class="step" data-step="4">
           <h1>When should HealthGuard be active?</h1>
           <div class="field">
-            <label for="schedule-start">Active hours start</label>
-            <input type="time" id="schedule-start" value="09:00" />
-          </div>
-          <div class="field">
-            <label for="schedule-end">Active hours end</label>
-            <input type="time" id="schedule-end" value="18:00" />
-          </div>
-          <div class="toggle-row">
-            <label for="posture-enabled">Enable posture check reminders</label>
-            <input type="checkbox" id="posture-enabled" checked />
+            <label>Active hours</label>
+            <div class="time-range">
+              <input type="time" id="schedule-start" value="09:00" />
+              <span>to</span>
+              <input type="time" id="schedule-end" value="18:00" />
+            </div>
           </div>
           <div class="toggle-row">
-            <label for="hydrate-enabled">Enable hydration reminders</label>
-            <input type="checkbox" id="hydrate-enabled" checked />
+            <span>Posture check (30 min)</span>
+            <label class="toggle">
+              <input type="checkbox" id="posture-enabled" checked />
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+          <div class="toggle-row">
+            <span>Hydration nudge (60 min)</span>
+            <label class="toggle">
+              <input type="checkbox" id="hydrate-enabled" checked />
+              <span class="toggle-track"></span>
+            </label>
           </div>
         </div>
 
@@ -248,12 +112,12 @@
           <ul id="summary-list"></ul>
         </div>
 
-        <div class="nav">
-          <button type="button" id="btn-prev">Previous</button>
-          <button type="button" id="btn-next">Next</button>
+        <div class="wizard-nav">
+          <button type="button" id="btn-prev" class="hg-btn-ghost">Previous</button>
+          <button type="button" id="btn-next" class="hg-btn-primary">Next</button>
         </div>
-      </div>
-    </div>
+      </article>
+    </main>
 
     <script src="onboarding.js" type="module"></script>
   </body>

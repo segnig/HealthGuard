@@ -201,6 +201,114 @@ function bindSettingsForm() {
   });
 }
 
+// ── Per-site limits ────────────────────────────────────────────────────────
+
+/** @type {Record<string, number>} */
+let siteLimits = {};
+
+/**
+ * Normalizes free-form domain input ("https://www.YouTube.com/feed") to a bare
+ * host ("youtube.com").
+ * @param {string} input
+ * @returns {string|null}
+ */
+function normalizeDomain(input) {
+  const value = (input || "").trim().toLowerCase();
+  if (!value) return null;
+
+  const host = value
+    .replace(/^[a-z]+:\/\//, "")
+    .replace(/^www\./, "")
+    .split("/")[0]
+    .split("?")[0];
+
+  return host || null;
+}
+
+/**
+ * @param {number} ms
+ * @returns {string}
+ */
+function limitLabel(ms) {
+  const hours = ms / 3_600_000;
+  return Number.isInteger(hours) ? `${hours}h` : `${hours.toFixed(1)}h`;
+}
+
+async function saveSiteLimits() {
+  await chrome.runtime.sendMessage({
+    type: "SET_SITE_LIMITS",
+    payload: { siteLimits }
+  });
+  flashGlobalSaved();
+}
+
+function renderSiteLimits() {
+  const list = document.getElementById("site-limit-list");
+  list.innerHTML = "";
+
+  const entries = Object.entries(siteLimits).sort((a, b) => a[0].localeCompare(b[0]));
+
+  if (!entries.length) {
+    const empty = document.createElement("li");
+    empty.className = "site-limit-empty";
+    empty.textContent = "No per-site limits yet.";
+    list.appendChild(empty);
+    return;
+  }
+
+  entries.forEach(([domain, ms]) => {
+    const item = document.createElement("li");
+    item.className = "site-limit-item";
+
+    const label = document.createElement("span");
+    label.className = "sl-domain";
+    label.textContent = domain;
+
+    const limit = document.createElement("span");
+    limit.className = "sl-limit";
+    limit.textContent = limitLabel(ms);
+
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "sl-remove";
+    remove.textContent = "Remove";
+    remove.addEventListener("click", async () => {
+      delete siteLimits[domain];
+      renderSiteLimits();
+      await saveSiteLimits();
+    });
+
+    item.append(label, limit, remove);
+    list.appendChild(item);
+  });
+}
+
+function bindSiteLimits() {
+  const domainInput = document.getElementById("site-limit-domain");
+  const hoursInput = document.getElementById("site-limit-hours");
+
+  const addLimit = async () => {
+    const domain = normalizeDomain(domainInput.value);
+    const hours = Number(hoursInput.value);
+
+    if (!domain || !Number.isFinite(hours) || hours <= 0) return;
+
+    siteLimits[domain] = Math.round(hours * 3_600_000);
+    domainInput.value = "";
+    hoursInput.value = "";
+    renderSiteLimits();
+    await saveSiteLimits();
+  };
+
+  document.getElementById("site-limit-add").addEventListener("click", addLimit);
+  domainInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") addLimit();
+  });
+  hoursInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") addLimit();
+  });
+}
+
 /**
  * @param {string} dateStr
  * @returns {string}
@@ -440,6 +548,10 @@ function downloadTextFile(filename, content, mimeType) {
 const settings = await chrome.runtime.sendMessage({ type: "GET_SETTINGS" });
 loadSettingsForm(settings);
 bindSettingsForm();
+
+siteLimits = { ...(settings.siteLimits || {}) };
+renderSiteLimits();
+bindSiteLimits();
 
 document.getElementById("btn-export-json").addEventListener("click", async () => {
   const response = await chrome.runtime.sendMessage({ type: "EXPORT_DATA" });

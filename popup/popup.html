@@ -7,12 +7,12 @@
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
-    <header>
+    <header class="hg-header">
       <div class="header-brand">
         <img src="../icons/icon32.png" alt="" width="32" height="32" class="app-icon" />
-        <div class="header-text">
+        <div>
           <h1>HealthGuard</h1>
-          <p id="status-label">Active · protecting you</p>
+          <p id="status-label" class="header-subtitle">Active · protecting you</p>
         </div>
       </div>
       <label class="toggle" for="master-toggle" aria-label="Enable HealthGuard">
@@ -21,8 +21,19 @@
       </label>
     </header>
 
+    <section id="score-section" class="card score-card">
+      <div class="score-ring">
+        <span id="health-score">—</span>
+        <small>/100</small>
+      </div>
+      <div class="score-text">
+        <h2>Health score</h2>
+        <p id="score-detail">Breaks, limits &amp; hearing combined.</p>
+      </div>
+    </section>
+
     <section id="screen-section" class="card">
-      <h2>Screen Time Today</h2>
+      <h2>Screen time today</h2>
       <div class="stat-row">
         <div id="total-time" class="stat-value">—</div>
         <div id="limit-caption" class="stat-caption">of — daily limit</div>
@@ -36,20 +47,20 @@
     </section>
 
     <section id="sound-section" class="card">
-      <h2>Hearing Budget</h2>
+      <h2>Hearing budget</h2>
       <canvas id="dose-gauge" width="140" height="100"></canvas>
       <p id="dose-caption" class="dose-caption">— of daily</p>
       <p id="dose-label" class="dose-detail">—</p>
     </section>
 
     <section id="reminders-section" class="card">
-      <h2>Next Reminders</h2>
+      <h2>Next reminders</h2>
       <div id="reminders-list"></div>
     </section>
 
     <footer id="controls">
-      <button id="btn-break" type="button">Take a break</button>
-      <button id="btn-options" type="button">Settings</button>
+      <button id="btn-break" type="button" class="hg-btn-secondary">Take a break</button>
+      <button id="btn-options" type="button" class="hg-btn-ghost">Settings</button>
     </footer>
 
     <script src="popup.js" type="module"></script>

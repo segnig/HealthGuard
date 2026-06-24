@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="options.css" />
   </head>
   <body>
-    <header>
+    <header class="hg-header">
       <div class="header-brand">
         <img src="../icons/icon32.png" alt="" width="32" height="32" class="app-icon" />
         <div>
@@ -15,7 +15,7 @@
           <p class="header-subtitle">Settings &amp; analytics</p>
         </div>
       </div>
-      <div id="save-status" class="save-status">✓ All saved</div>
+      <div id="save-status" class="save-status header-action">✓ All saved</div>
     </header>
 
     <nav class="tab-nav">
@@ -58,6 +58,16 @@
                 <option value="overlay">Show overlay</option>
                 <option value="block">Block page</option>
               </select>
+            </div>
+            <div class="field-row">
+              <label for="site-limit-domain">Per-site limits</label>
+              <div class="site-limit-add">
+                <input type="text" id="site-limit-domain" placeholder="youtube.com" autocomplete="off" />
+                <input type="number" id="site-limit-hours" min="0.1" step="0.1" placeholder="1" />
+                <span>h</span>
+                <button type="button" id="site-limit-add" class="hg-btn-primary">Add</button>
+              </div>
+              <ul id="site-limit-list" class="site-limit-list"></ul>
             </div>
           </article>
 
@@ -130,18 +140,28 @@
       </section>
 
       <section id="tab-weekly" class="tab-panel">
-        <canvas id="chart-weekly" width="720" height="320"></canvas>
+        <article class="analytics-card">
+          <h2>Weekly screen time</h2>
+          <canvas id="chart-weekly" width="720" height="320"></canvas>
+        </article>
       </section>
 
       <section id="tab-sound" class="tab-panel">
-        <canvas id="chart-sound" width="720" height="320"></canvas>
-        <div id="heatmap"></div>
+        <article class="analytics-card">
+          <h2>Hearing dose history</h2>
+          <canvas id="chart-sound" width="720" height="320"></canvas>
+        </article>
+        <div id="heatmap" aria-label="30-day hearing dose heatmap"></div>
       </section>
 
-      <section id="tab-export" class="tab-panel export-panel">
-        <button type="button" id="btn-export-json">Export JSON</button>
-        <button type="button" id="btn-export-csv">Export CSV</button>
-        <button type="button" id="btn-reset">Reset today</button>
+      <section id="tab-export" class="tab-panel">
+        <article class="hg-card export-card">
+          <h2>Export your data</h2>
+          <p class="export-note">All exports stay on your device. Nothing is uploaded.</p>
+          <button type="button" id="btn-export-json" class="hg-btn-primary">Export JSON</button>
+          <button type="button" id="btn-export-csv" class="hg-btn-primary">Export CSV</button>
+          <button type="button" id="btn-reset" class="hg-btn-ghost">Reset today</button>
+        </article>
       </section>
     </main>
 
