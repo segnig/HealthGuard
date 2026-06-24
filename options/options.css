@@ -1,1 +1,127 @@
-/* options.css placeholder */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+header {
+  padding: 20px 24px 0;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.tab-nav {
+  display: flex;
+  gap: 8px;
+  padding: 16px 24px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.tab-btn {
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.tab-btn.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+main {
+  padding: 24px;
+}
+
+.tab-panel {
+  display: none;
+}
+
+.tab-panel.active {
+  display: block;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 14px;
+  max-width: 420px;
+}
+
+.field label {
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.field input,
+.field select {
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}
+
+.saved-indicator {
+  font-size: 0.8rem;
+  color: #16a34a;
+}
+
+#chart-weekly,
+#chart-sound {
+  width: 100%;
+  max-width: 720px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+
+#heatmap {
+  display: grid;
+  grid-template-columns: repeat(10, 24px);
+  gap: 6px;
+  margin-top: 16px;
+}
+
+#heatmap .heat-cell {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+}
+
+#tab-export {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 240px;
+}
+
+#tab-export.active {
+  display: flex;
+}
+
+#tab-export button {
+  border-radius: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+#btn-export-json,
+#btn-export-csv {
+  border: 0;
+  background: #2563eb;
+  color: #fff;
+}
+
+#btn-reset {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+}

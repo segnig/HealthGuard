@@ -1,1 +1,99 @@
-<!-- options.html placeholder -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HealthGuard Options</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <header>
+      <h1>HealthGuard</h1>
+    </header>
+
+    <nav class="tab-nav">
+      <button type="button" class="tab-btn active" data-tab="settings">Settings</button>
+      <button type="button" class="tab-btn" data-tab="weekly">Weekly Report</button>
+      <button type="button" class="tab-btn" data-tab="sound">Sound History</button>
+      <button type="button" class="tab-btn" data-tab="export">Data Export</button>
+    </nav>
+
+    <main>
+      <section id="tab-settings" class="tab-panel active">
+        <div class="field">
+          <label for="setting-enabled">Extension enabled</label>
+          <input type="checkbox" id="setting-enabled" data-key="enabled" data-type="boolean" />
+        </div>
+        <div class="field">
+          <label for="setting-dailyLimitHours">Daily screen limit (hours)</label>
+          <input type="number" id="setting-dailyLimitHours" min="0" step="0.25" data-key="dailyLimitMs" data-type="hours" />
+        </div>
+        <div class="field">
+          <label for="setting-breakIntervalMin">Break interval (minutes)</label>
+          <input type="number" id="setting-breakIntervalMin" min="1" data-key="breakIntervalMin" data-type="number" />
+        </div>
+        <div class="field">
+          <label for="setting-breakDurationSec">Break duration (seconds)</label>
+          <input type="number" id="setting-breakDurationSec" min="5" data-key="breakDurationSec" data-type="number" />
+        </div>
+        <div class="field">
+          <label for="setting-maxDB">Max sound level (dB)</label>
+          <input type="number" id="setting-maxDB" min="50" max="110" data-key="maxDB" data-type="number" />
+        </div>
+        <div class="field">
+          <label for="setting-hearingWarnAt">Hearing warning threshold (%)</label>
+          <input type="number" id="setting-hearingWarnAt" min="1" max="100" data-key="hearingWarnAt" data-type="number" />
+        </div>
+        <div class="field">
+          <label for="setting-scheduleStart">Active schedule start (hour)</label>
+          <input type="number" id="setting-scheduleStart" min="0" max="23" data-key="scheduleStart" data-type="number" />
+        </div>
+        <div class="field">
+          <label for="setting-scheduleEnd">Active schedule end (hour)</label>
+          <input type="number" id="setting-scheduleEnd" min="0" max="23" data-key="scheduleEnd" data-type="number" />
+        </div>
+        <div class="field">
+          <label for="setting-postureIntervalMin">Posture check interval (minutes)</label>
+          <input type="number" id="setting-postureIntervalMin" min="1" data-key="postureIntervalMin" data-type="number" />
+        </div>
+        <div class="field">
+          <label for="setting-hydrateIntervalMin">Hydration reminder interval (minutes)</label>
+          <input type="number" id="setting-hydrateIntervalMin" min="1" data-key="hydrateIntervalMin" data-type="number" />
+        </div>
+        <div class="field">
+          <label for="setting-actionOnLimit">Action when limit reached</label>
+          <select id="setting-actionOnLimit" data-key="actionOnLimit" data-type="string">
+            <option value="notify">Notify</option>
+            <option value="overlay">Overlay</option>
+            <option value="block">Block</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="setting-blueLightHour">Blue light warning hour</label>
+          <input type="number" id="setting-blueLightHour" min="0" max="23" data-key="blueLightHour" data-type="number" />
+        </div>
+        <div class="field">
+          <label for="setting-autoExport">Auto-export weekly JSON</label>
+          <input type="checkbox" id="setting-autoExport" data-key="autoExport" data-type="boolean" />
+        </div>
+      </section>
+
+      <section id="tab-weekly" class="tab-panel">
+        <canvas id="chart-weekly" width="720" height="320"></canvas>
+      </section>
+
+      <section id="tab-sound" class="tab-panel">
+        <canvas id="chart-sound" width="720" height="320"></canvas>
+        <div id="heatmap"></div>
+      </section>
+
+      <section id="tab-export" class="tab-panel">
+        <button type="button" id="btn-export-json">Export JSON</button>
+        <button type="button" id="btn-export-csv">Export CSV</button>
+        <button type="button" id="btn-reset">Reset today</button>
+      </section>
+    </main>
+
+    <script src="options.js" type="module"></script>
+  </body>
+</html>
